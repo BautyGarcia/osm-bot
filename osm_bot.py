@@ -136,7 +136,7 @@ def main():
         def execute_balances_and_ads():
             # PASO 8: Esperar y clickear el div con id "balances"
             print("💰 Esperando y buscando div 'balances'...")
-            balances_div = wait_for_element(driver, By.ID, "balances", timeout=15, condition="clickable")
+            balances_div = wait_for_element(driver, By.ID, "balances", timeout=30, condition="clickable")
             if balances_div:
                 balances_div.click()
                 print("✅ Div 'balances' clickeado")
