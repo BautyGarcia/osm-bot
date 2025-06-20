@@ -187,7 +187,54 @@ def main():
                 print(f"🔍 Verificando límite de videos...")
                 limit_message = wait_for_element(driver, By.XPATH, "//h3[contains(text(), \"Can't show video\")]", timeout=3, condition="presence")
                 
-                if limit_message:
+                # Si el wait_for_element devuelve None por timeout, reiniciar
+                if limit_message is None:
+                    # No hay mensaje de límite, verificar si es un problema de timeout
+                    print("🔍 Buscando botón 'Watch ad'...")
+                    watch_ad_button = wait_for_element(driver, By.XPATH, "//div[contains(text(), 'Watch ad')]", timeout=10, condition="clickable")
+                    
+                    if watch_ad_button is None:
+                        print("❌ Timeout detectado: Modal no se abrió correctamente")
+                        print("🔄 Reiniciando desde paso 8...")
+                        driver.refresh()
+                        
+                        if execute_balances_and_ads():
+                            print("✅ Reinicio exitoso, continuando...")
+                            continue
+                        else:
+                            print("❌ Error en reinicio, esperando 3 minutos...")
+                            time.sleep(180)
+                            continue
+                    
+                    # Si encontró el botón Watch ad, proceder normalmente
+                    print(f"📺 Anuncio #{ad_counter + 1} - Clickeando 'Watch ad'...")
+                    watch_ad_button.click()
+                    ad_counter += 1
+                    
+                    # Esperar a que el anuncio termine (el botón vuelva a aparecer)
+                    print("⏳ Esperando a que termine el anuncio...")
+                    
+                    # Esperar a que el botón "Watch ad" vuelva a estar disponible
+                    print("🔄 Esperando a que el anuncio termine y el botón vuelva a aparecer...")
+                    next_ad_button = wait_for_element(driver, By.XPATH, "//div[contains(text(), 'Watch ad')]", timeout=300, condition="clickable")
+                    
+                    if next_ad_button:
+                        print(f"✅ Anuncio #{ad_counter} completado. Preparando siguiente anuncio...")
+                        time.sleep(1)  # Pequeña pausa antes del siguiente anuncio
+                    else:
+                        print("❌ Timeout esperando que termine el anuncio")
+                        print("🔄 Reiniciando desde paso 8...")
+                        driver.refresh()
+                        
+                        if execute_balances_and_ads():
+                            print("✅ Reinicio exitoso después de timeout de anuncio")
+                            continue
+                        else:
+                            print("❌ Error en reinicio, esperando 3 minutos...")
+                            time.sleep(180)
+                            continue
+                
+                elif limit_message:
                     print("⏰ ¡Límite de videos alcanzado!")
                     print("📝 Mensaje: 'Can't show video' detectado")
                     
@@ -258,32 +305,9 @@ def main():
                     
                     continue
                 
-                # Buscar botón "Watch ad"
-                print(f"🔍 Buscando botón 'Watch ad' (Anuncio #{ad_counter + 1})...")
-                watch_ad_button = wait_for_element(driver, By.XPATH, "//div[contains(text(), 'Watch ad')]", timeout=10, condition="clickable")
-                
-                if watch_ad_button:
-                    print(f"📺 Anuncio #{ad_counter + 1} - Clickeando 'Watch ad'...")
-                    watch_ad_button.click()
-                    ad_counter += 1
-                    
-                    # Esperar a que el anuncio termine (el botón vuelva a aparecer)
-                    print("⏳ Esperando a que termine el anuncio...")
-                    
-                    # Esperar a que el botón "Watch ad" vuelva a estar disponible
-                    print("🔄 Esperando a que el anuncio termine y el botón vuelva a aparecer...")
-                    next_ad_button = wait_for_element(driver, By.XPATH, "//div[contains(text(), 'Watch ad')]", timeout=300, condition="clickable")
-                    
-                    if next_ad_button:
-                        print(f"✅ Anuncio #{ad_counter} completado. Preparando siguiente anuncio...")
-                        time.sleep(1)  # Pequeña pausa antes del siguiente anuncio
-                    else:
-                        print("⚠️ El botón 'Watch ad' no volvió a aparecer, continuando...")
-                
                 else:
-                    print("⚠️ No se encontró botón 'Watch ad', esperando...")
+                    print("⚠️ Estado inesperado, esperando...")
                     time.sleep(5)  # Esperar 5 segundos antes de intentar de nuevo
-                    
             except KeyboardInterrupt:
                 print(f"\n🛑 Loop de anuncios detenido por el usuario")
                 print(f"📊 Total de anuncios vistos: {ad_counter}")
