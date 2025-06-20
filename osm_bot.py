@@ -11,6 +11,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
+import re
 
 # ========== CONFIGURACIÓN ==========
 # Cambiar estos valores por tus credenciales
@@ -123,7 +124,7 @@ def main():
         
         # PASO 7: Apretar el botón de login
         print("🚪 Clickeando botón de login...")
-        final_login_button = wait_for_element(driver, By.ID, "login", condition="clickable")
+        final_login_button = wait_for_element(driver, By.ID, "login", condition="visible")
         if final_login_button:
             final_login_button.click()
             print("✅ Botón de login clickeado")
@@ -192,29 +193,69 @@ def main():
                     
                     # Buscar también el mensaje con los minutos específicos
                     detail_message = wait_for_element(driver, By.XPATH, "//p[contains(text(), 'You have reached the maximum of videos you can watch here')]", timeout=2, condition="presence")
+                    wait_minutes = 0  # 0 = ir directo a lapsos de 3 minutos
+                    skip_initial_wait = False
+                    
                     if detail_message:
                         detail_text = detail_message.text
                         print(f"📝 Detalle: {detail_text}")
+                        
+                        # Parsear el tiempo de espera del mensaje
+                        if "an hour" in detail_text.lower():
+                            wait_minutes = 61  # 60 + 1 minutos
+                            print("⏰ Detectado: 'an hour' → Esperando 61 minutos")
+                        elif "a few seconds" in detail_text.lower():
+                            wait_minutes = 1  # 1 minuto
+                            print("⏰ Detectado: 'a few seconds' → Esperando 1 minuto")
+                        else:
+                            # Buscar número en el texto
+                            numbers = re.findall(r'\d+', detail_text)
+                            if numbers:
+                                x_minutes = int(numbers[0])
+                                wait_minutes = x_minutes + 1  # x + 1 minutos
+                                print(f"⏰ Detectado: {x_minutes} minutos → Esperando {wait_minutes} minutos")
+                            else:
+                                skip_initial_wait = True
+                                print("⚠️ Mensaje no coincide con casos específicos → Iniciando lapsos de 3 minutos")
+                    else:
+                        skip_initial_wait = True
+                        print("⚠️ No se encontró mensaje de detalle → Iniciando lapsos de 3 minutos")
                     
-                    print("⏳ Esperando 5 minutos antes de volver a intentar...")
+                    # Hacer el sleep inicial solo si no hay que saltárselo
+                    if not skip_initial_wait and wait_minutes > 0:
+                        total_seconds = wait_minutes * 60
+                        print(f"⏳ Esperando {wait_minutes} minutos iniciales...")
+                        
+                        # Countdown para el sleep inicial
+                        for remaining in range(total_seconds, 0, -60):
+                            minutes = remaining // 60
+                            print(f"⏰ Tiempo inicial restante: {minutes} minutos")
+                            time.sleep(60)  # Esperar 1 minuto y mostrar update
+                        
+                        print("✅ Espera inicial completada")
                     
-                    # Esperar 5 minutos (300 segundos) con countdown
-                    for remaining in range(300, 0, -30):
-                        minutes = remaining // 60
-                        seconds = remaining % 60
-                        print(f"⏰ Tiempo restante: {minutes}:{seconds:02d} minutos")
-                        time.sleep(30)  # Esperar 30 segundos y mostrar update
+                    # Ahora hacer lapsos de 3 minutos hasta que funcione
+                    attempt = 1
+                    while True:
+                        print(f"🔄 Intento #{attempt} - Refrescando página...")
+                        driver.refresh()
+                        
+                        print("🔄 Reejecutando desde paso 8...")
+                        if execute_balances_and_ads():
+                            print("✅ Página refrescada exitosamente, continuando con anuncios...")
+                            break
+                        else:
+                            print(f"❌ Intento #{attempt} falló, esperando 3 minutos...")
+                            print("⏳ Esperando 3 minutos antes del siguiente intento...")
+                            
+                            # Countdown de 3 minutos
+                            for remaining in range(180, 0, -60):
+                                minutes = remaining // 60
+                                print(f"⏰ Próximo intento en: {minutes} minutos")
+                                time.sleep(60)
+                            
+                            attempt += 1
                     
-                    print("✅ Espera completada")
-                    print("🔄 Refrescando página...")
-                    driver.refresh()
-                    
-                    print("🔄 Reejecutando desde paso 8...")
-                    if not execute_balances_and_ads():
-                        print("❌ Error al reejecutar pasos después del refresh")
-                        return
-                    
-                    print("✅ Página refrescada, continuando con anuncios...")
                     continue
                 
                 # Buscar botón "Watch ad"
@@ -229,12 +270,9 @@ def main():
                     # Esperar a que el anuncio termine (el botón vuelva a aparecer)
                     print("⏳ Esperando a que termine el anuncio...")
                     
-                    # Esperar un poco para que el anuncio se abra
-                    time.sleep(2)
-                    
                     # Esperar a que el botón "Watch ad" vuelva a estar disponible
                     print("🔄 Esperando a que el anuncio termine y el botón vuelva a aparecer...")
-                    next_ad_button = wait_for_element(driver, By.XPATH, "//div[contains(text(), 'Watch ad')]", timeout=60, condition="clickable")
+                    next_ad_button = wait_for_element(driver, By.XPATH, "//div[contains(text(), 'Watch ad')]", timeout=300, condition="clickable")
                     
                     if next_ad_button:
                         print(f"✅ Anuncio #{ad_counter} completado. Preparando siguiente anuncio...")
