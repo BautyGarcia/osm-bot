@@ -37,7 +37,7 @@ El bot requiere **Google Chrome** instalado en tu sistema.
 ## ⚙️ Configuración
 
 ### 📝 Editar Credenciales
-Abre `osm_bot.py` y cambia estas líneas con tus credenciales reales:
+Abre `osm_ad_bot.py` y cambia estas líneas con tus credenciales reales:
 
 ```python
 # Líneas 18-19
@@ -50,7 +50,7 @@ PASSWORD = "tu_contraseña_real"   # ← Cambiar aquí
 ### Ejecutar el Bot
 ```bash
 cd osm-clicker
-python osm_bot.py
+python osm_ad_bot.py
 ```
 
 ### Primera Ejecución
@@ -176,7 +176,7 @@ Al finalizar el bot muestra:
 
 ```
 osm-clicker/
-├── osm_bot.py          # Script principal del bot
+├── osm_ad_bot.py          # Script principal del bot
 ├── requirements.txt    # Dependencias de Python
 └── README.md          # Este archivo
 ```
@@ -186,13 +186,13 @@ osm-clicker/
 ### Windows
 ```bash
 # Ejecutar en background
-start /b python osm_bot.py
+start /b python osm_ad_bot.py
 ```
 
 ### Linux/macOS
 ```bash
 # Ejecutar en background
-nohup python osm_bot.py &
+nohup python osm_ad_bot.py &
 ```
 
 ## 🆕 Actualizaciones
