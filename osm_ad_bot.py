@@ -2,7 +2,7 @@
 """
 OSM Bot - Automatización para Online Soccer Manager
 
-Este script automatiza el login en Online Soccer Manager.
+Este script automatiza el farmeo de anuncios de Online Soccer Manager.
 """
 
 from selenium import webdriver
@@ -15,8 +15,8 @@ import re
 
 # ========== CONFIGURACIÓN ==========
 # Cambiar estos valores por tus credenciales
-USERNAME = "Crocoo"  # Cambiar por tu nombre de usuario
-PASSWORD = "Bauty2005!"  # Cambiar por tu contraseña
+USERNAME = "tu_usuario_real"  # Cambiar por tu nombre de usuario
+PASSWORD = "tu_contraseña_real"  # Cambiar por tu contraseña
 
 OSM_URL = "https://en.onlinesoccermanager.com/ChooseLeague"
 
@@ -125,6 +125,7 @@ def main():
         # PASO 7: Apretar el botón de login
         print("🚪 Clickeando botón de login...")
         final_login_button = wait_for_element(driver, By.ID, "login", condition="visible")
+        wait_for_element(driver, By.ID, "login", condition="clickable")
         if final_login_button:
             final_login_button.click()
             print("✅ Botón de login clickeado")
